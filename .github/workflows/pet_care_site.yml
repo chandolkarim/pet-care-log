@@ -1,0 +1,54 @@
+name: Pet Care Site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  # 매일 한 번 시트를 검사하고 생성 시점 데이터를 새로 넣습니다. 지금 상태는 페이지를 열 때마다 새로 읽습니다.
+  schedule:
+    - cron: '17 23 * * *'  # UTC 23:17 = 다음 날 한국시간 08:17
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - name: Build page from Google Sheet
+        env:
+          # 저장소 Settings → Secrets and variables → Actions → Variables에 등록한 값
+          SCHEDULE_CSV_URL: ${{ vars.SCHEDULE_CSV_URL }}
+          LOG_CSV_URL: ${{ vars.LOG_CSV_URL }}
+          FORM_URL: ${{ vars.FORM_URL }}
+        run: python main.py --output _site/index.html
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

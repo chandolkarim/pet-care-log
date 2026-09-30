@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>__TITLE__</title>
+  <style>
+    :root { --bg: #f6f4ef; --card: #fff; --ink: #1f2a33; --quiet: #5b6873; --line: #e2ddd3;
+      --ok: #1f7a4d; --ok-bg: #e5f4ec; --soon: #8a5a00; --soon-bg: #fdf1d8;
+      --late: #b03a12; --late-bg: #fde8df; --dup: #b4122e; --dup-bg: #fde2e6; --accent: #2f5d8a; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #15191d; --card: #1f252b; --ink: #eef1f3; --quiet: #a3adb6; --line: #333b43;
+        --ok: #6fd3a0; --ok-bg: #173327; --soon: #f3c66b; --soon-bg: #3a2f14;
+        --late: #ff9a73; --late-bg: #3d2219; --dup: #ff8a9b; --dup-bg: #411c24; --accent: #8cb8e6; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 20px 16px 40px; }
+    header { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+    h1 { font-size: 24px; margin: 0; letter-spacing: -0.5px; }
+    .lead { margin: 2px 0 0; color: var(--quiet); font-size: 14px; }
+    .record { display: inline-block; background: var(--accent); color: var(--bg); text-decoration: none;
+      font-weight: 700; padding: 10px 18px; border-radius: 999px; white-space: nowrap; }
+    .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 16px 0 8px; font-size: 14px; color: var(--quiet); }
+    select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+    #source.warn { color: var(--late); }
+    h2 { font-size: 16px; margin: 24px 0 10px; }
+    .alerts { display: grid; gap: 8px; margin-top: 12px; }
+    .alert { border-radius: 12px; padding: 12px 14px; font-size: 15px; }
+    .alert strong { display: block; }
+    .alert.dup { background: var(--dup-bg); color: var(--dup); }
+    .alert.late { background: var(--late-bg); color: var(--late); }
+    .alert.note { background: var(--card); color: var(--quiet); border: 1px dashed var(--line); }
+    .cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; min-width: 0; }
+    .card-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+    .card h3 { margin: 0; font-size: 17px; overflow-wrap: anywhere; }
+    .pet { font-size: 12px; color: var(--quiet); }
+    .meta { font-size: 13px; color: var(--quiet); margin: 2px 0 10px; overflow-wrap: anywhere; }
+    .last { font-size: 15px; margin: 0 0 4px; }
+    .next-ok { font-size: 13px; margin: 0 0 8px; color: var(--dup); font-weight: 600; }
+    .slots { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .badge { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+    .b-done { background: var(--ok-bg); color: var(--ok); }
+    .b-plan { background: transparent; color: var(--quiet); border: 1px solid var(--line); }
+    .b-soon, .b-now { background: var(--soon-bg); color: var(--soon); }
+    .b-late { background: var(--late-bg); color: var(--late); }
+    .b-dup { background: var(--dup-bg); color: var(--dup); }
+    .card.dup { border-color: var(--dup); }
+    .card.late { border-color: var(--late); }
+    ol.timeline { list-style: none; margin: 0; padding: 0; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
+    ol.timeline li { display: grid; grid-template-columns: 52px 1fr auto; gap: 10px; align-items: baseline;
+      padding: 10px 14px; border-top: 1px solid var(--line); font-size: 14px; }
+    ol.timeline li:first-child { border-top: 0; }
+    .t { font-variant-numeric: tabular-nums; color: var(--quiet); }
+    .what { overflow-wrap: anywhere; }
+    .what small { color: var(--quiet); }
+    .empty { color: var(--quiet); padding: 14px; margin: 0; }
+    footer { margin-top: 32px; font-size: 12px; color: var(--quiet); line-height: 1.8; }
+    footer p { margin: 0; }
+    .disclaimer { font-weight: 700; }
+    a:focus-visible, select:focus-visible { outline: 3px solid var(--soon); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1 id="title"></h1>
+        <p class="lead" id="description"></p>
+      </div>
+      <a class="record" id="record" hidden>+ 기록하기</a>
+    </header>
+    <div class="toolbar">
+      <label>반려동물 <select id="pet"><option value="">전체</option></select></label>
+      <span id="clock"></span>
+      <span id="source" role="status" aria-live="polite"></span>
+    </div>
+    <section class="alerts" id="alerts" aria-label="확인이 필요한 것"></section>
+    <h2>지금 상태</h2>
+    <section class="cards" id="cards"></section>
+    <h2>오늘 타임라인</h2>
+    <ol class="timeline" id="timeline"></ol>
+    <footer>
+      <p id="footer-source"></p>
+      <p id="footer-build"></p>
+      <p class="disclaimer">수의사 처방을 대신하지 않습니다. 약의 양과 간격은 처방전을 따르세요.</p>
+    </footer>
+  </main>
+  <script>
+    const CONFIG = /*__CONFIG__*/null;
+    const MIN = 60000, HOUR = 60 * MIN, DAY = 24 * HOUR, KST = 9 * HOUR;
+    const SOON = 30 * MIN, GRACE = 30 * MIN, FREE_ITEMS = ['증상', '체중'];
+
+    // 모든 시각은 '한국시간 벽시계'를 UTC 숫자로 다룹니다. 한국은 서머타임이 없어 +9시간이면 됩니다.
+    const nowWall = () => Date.now() + KST;
+    const wallOf = (day, hm) => { const [y, m, d] = day.split('-').map(Number); const [h, mi] = hm.split(':').map(Number); return Date.UTC(y, m - 1, d, h, mi); };
+    const dayOf = ms => new Date(ms).toISOString().slice(0, 10);
+    const hmOf = ms => new Date(ms).toISOString().slice(11, 16);
+    const span = ms => { const m = Math.max(0, Math.round(ms / MIN)); const h = Math.floor(m / 60); return h ? `${h}시간${m % 60 ? ` ${m % 60}분` : ''}` : `${m}분`; };
+    const ago = ms => { const d = nowWall() - ms; if (d < MIN) return '방금'; if (d >= DAY) return `${Math.floor(d / DAY)}일 전`; return `${span(d)} 전`; };
+    const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+    // ---- 시트 CSV 읽기: main.py와 같은 규칙. 브라우저에서는 문제 행을 건너뛰고 개수만 알립니다. ----
+    function parseCSV(text) {
+      const rows = []; let row = [], field = '', q = false;
+      text = text.replace(/^﻿/, '');
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (q) { if (c === '"' && text[i + 1] === '"') { field += '"'; i++; } else if (c === '"') q = false; else field += c; }
+        else if (c === '"') q = true;
+        else if (c === ',') { row.push(field); field = ''; }
+        else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+        else if (c !== '\r') field += c;
+      }
+      if (field !== '' || row.length) { row.push(field); rows.push(row); }
+      const header = (rows.shift() || []).map(h => h.trim());
+      return { header, rows: rows.map(r => Object.fromEntries(header.map((h, i) => [h, (r[i] || '').trim()]))).filter(r => Object.values(r).some(Boolean)) };
+    }
+    const to24 = (h, mk) => { mk = (mk || '').toUpperCase(); if ((mk === '오후' || mk === 'PM') && h < 12) return h + 12; if ((mk === '오전' || mk === 'AM') && h === 12) return 0; return h; };
+    function parseStamp(v) {
+      let m, y, mo, d, h, mi, mk;
+      if ((m = v.match(/^(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})\.?\s+(?:(오전|오후)\s*)?(\d{1,2}):(\d{2})(?::\d{2})?$/))) [, y, mo, d, mk, h, mi] = m;
+      else if ((m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[ T](\d{1,2}):(\d{2})(?::\d{2})?$/))) [, y, mo, d, h, mi] = m;
+      else if ((m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(AM|PM))?$/i))) [, mo, d, y, h, mi, mk] = m;
+      else return null;
+      return Date.UTC(+y, +mo - 1, +d, to24(+h, mk), +mi);
+    }
+    function parseTimeOnly(v) {
+      const m = v.match(/^(?:(오전|오후)\s*)?(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(AM|PM))?$/i);
+      return m ? [to24(+m[2], m[1] || m[4]), +m[3]] : null;
+    }
+    function scheduleFromCSV(text) {
+      const { header, rows } = parseCSV(text); let skipped = 0;
+      for (const n of ['반려동물', '항목', '종류', '시각', '사용']) if (!header.includes(n)) throw new Error(`일정 탭에 '${n}' 열이 없습니다`);
+      const out = [];
+      for (const r of rows) {
+        if ((r['사용'] || '').toUpperCase() !== 'Y') continue;
+        const times = (r['시각'] || '').split(',').map(s => s.trim()).filter(Boolean);
+        const okTimes = times.every(t => /^\d{1,2}:\d{2}$/.test(t));
+        const interval = r['최소간격'] ? Number(r['최소간격']) : null;
+        if (!r['반려동물'] || !r['항목'] || !['밥', '약'].includes(r['종류']) || !times.length || !okTimes || (r['종류'] === '약' && !(interval > 0))) { skipped++; continue; }
+        out.push({ pet: r['반려동물'], item: r['항목'], kind: r['종류'], times: times.map(t => t.padStart(5, '0')).sort(),
+          amount: r['양'] || '', interval, start: r['시작일'] || '', end: r['종료일'] || '', memo: r['메모'] || '' });
+      }
+      return { schedule: out, skipped };
+    }
+    function logsFromCSV(text) {
+      const { header, rows } = parseCSV(text); let skipped = 0;
+      for (const n of ['타임스탬프', '누가', '반려동물', '항목']) if (!header.includes(n)) throw new Error(`기록 탭에 '${n}' 열이 없습니다`);
+      const out = [];
+      for (const r of rows) {
+        const stamp = parseStamp(r['타임스탬프'] || '');
+        if (stamp == null || !r['누가'] || !r['반려동물'] || !r['항목']) { skipped++; continue; }
+        let t = stamp;
+        if (r['실제 시각']) {
+          const a = parseTimeOnly(r['실제 시각']);
+          if (!a) { skipped++; continue; }
+          t = wallOf(dayOf(stamp), `${a[0]}:${a[1]}`);
+          if (t > stamp + 5 * MIN) t -= DAY;
+        }
+        out.push({ t, who: r['누가'], pet: r['반려동물'], item: r['항목'], amount: r['양'] || '', weight: r['체중'] || '', symptoms: r['증상'] || '', memo: r['메모'] || '' });
+      }
+      return { logs: out.sort((a, b) => a.t - b.t), skipped };
+    }
+
+    // ---- 상태 계산 ----
+    function compute(data, petFilter) {
+      const now = nowWall(), today = dayOf(now), dayStart = wallOf(today, '00:00');
+      const logs = data.logs.filter(l => l.t <= now + 5 * MIN);
+      const active = data.schedule.filter(s => (!s.start || s.start <= today) && (!s.end || today <= s.end) && (!petFilter || s.pet === petFilter));
+      const alerts = [], cards = [], timeline = [];
+      for (const s of active) {
+        const own = logs.filter(l => l.pet === s.pet && l.item === s.item);
+        const slots = s.times.map(t => wallOf(today, t));
+        const slotInfo = slots.map((at, i) => {
+          const from = i === 0 ? dayStart : (slots[i - 1] + at) / 2;
+          const to = i === slots.length - 1 ? dayStart + DAY : (at + slots[i + 1]) / 2;
+          const hits = own.filter(l => l.t >= from && l.t < to);
+          let state;
+          if (hits.length) state = 'done';
+          else if (now < at - SOON) state = 'plan';
+          else if (now < at) state = 'soon';
+          else if (now <= at + GRACE) state = 'now';
+          else state = 'late';
+          return { at, hits, state };
+        });
+        const dups = [];
+        if (s.kind === '약' && s.interval) {
+          for (let i = 1; i < own.length; i++) {
+            const gap = own[i].t - own[i - 1].t;
+            if (gap < s.interval * HOUR && own[i].t > now - DAY) dups.push([own[i - 1], own[i], gap]);
+          }
+        }
+        const last = own.at(-1);
+        const nextOk = s.kind === '약' && s.interval && last ? last.t + s.interval * HOUR : null;
+        for (const [a, b, gap] of dups) alerts.push({ type: 'dup', title: `중복 의심: ${s.pet} ${s.item}`,
+          body: `${hmOf(a.t)} ${a.who} → ${hmOf(b.t)} ${b.who}, ${span(gap)} 간격 (최소 ${s.interval}시간)` });
+        for (const x of slotInfo) {
+          if (x.state === 'late') alerts.push({ type: 'late', title: `${s.pet} ${s.item} ${hmOf(x.at)} 기록 없음`, body: `${span(now - x.at)} 지났습니다. 줬다면 기록해 주세요.` });
+          timeline.push({ t: x.hits[0] ? x.hits[0].t : x.at, planned: x.at, s, x });
+        }
+        cards.push({ s, slotInfo, last, nextOk, dups });
+      }
+      const scheduledKeys = new Set(data.schedule.map(s => `${s.pet}\u0000${s.item}`));
+      const matched = new Set(timeline.flatMap(e => e.x.hits));
+      for (const l of logs) {
+        if (l.t < dayStart || matched.has(l) || (petFilter && l.pet !== petFilter)) continue;
+        if (!FREE_ITEMS.includes(l.item) && !active.some(s => s.pet === l.pet && s.item === l.item)) {
+          if (!scheduledKeys.has(`${l.pet}\u0000${l.item}`)) alerts.push({ type: 'note', title: `일정에 없는 항목: ${l.pet} ${l.item}`, body: `${hmOf(l.t)} ${l.who}의 기록. 폼과 일정 탭의 이름이 같은지 확인하세요.` });
+        }
+        timeline.push({ t: l.t, log: l });
+      }
+      timeline.sort((a, b) => a.t - b.t);
+      const rank = c => c.dups.length ? 0 : c.slotInfo.some(x => x.state === 'late') ? 1 : c.slotInfo.some(x => x.state === 'now' || x.state === 'soon') ? 2 : 3;
+      cards.sort((a, b) => rank(a) - rank(b));
+      alerts.sort((a, b) => ['dup', 'late', 'note'].indexOf(a.type) - ['dup', 'late', 'note'].indexOf(b.type));
+      return { alerts, cards, timeline, now };
+    }
+
+    // ---- 그리기 ----
+    const LABEL = { done: '완료', plan: '예정', soon: '곧', now: '지금', late: '지남' };
+    function render() {
+      const petFilter = document.getElementById('pet').value;
+      const { alerts, cards, timeline, now } = compute(state.data, petFilter);
+      document.getElementById('clock').textContent = `지금 ${hmOf(now)}`;
+
+      document.getElementById('alerts').replaceChildren(...alerts.map(a => {
+        const box = el('div', `alert ${a.type}`); box.append(el('strong', null, a.title), el('span', null, a.body)); return box;
+      }));
+
+      document.getElementById('cards').replaceChildren(...(cards.length ? cards.map(({ s, slotInfo, last, nextOk, dups }) => {
+        const card = el('article', 'card' + (dups.length ? ' dup' : slotInfo.some(x => x.state === 'late') ? ' late' : ''));
+        const head = el('div', 'card-head'); head.append(el('h3', null, s.item), el('span', 'pet', `${s.pet} · ${s.kind}`));
+        const metaText = [s.amount, s.times.join(' · '), s.end ? `${s.end}까지` : '', s.memo].filter(Boolean).join(' · ');
+        card.append(head, el('p', 'meta', metaText));
+        card.append(el('p', 'last', last ? `마지막: ${hmOf(last.t)} · ${last.who} (${ago(last.t)})` : '마지막: 기록 없음'));
+        if (nextOk && nextOk > now) card.append(el('p', 'next-ok', `다음 투약은 ${dayOf(nextOk) === dayOf(now) ? '' : '내일 '}${hmOf(nextOk)} 이후 (최소 ${s.interval}시간)`));
+        const chips = el('div', 'slots');
+        for (const x of slotInfo) {
+          const text = x.state === 'done' ? `${hmOf(x.at)} 완료 · ${x.hits.map(h => h.who).join(', ')}${x.hits.length > 1 ? ` (${x.hits.length}번)` : ''}`
+            : x.state === 'late' ? `${hmOf(x.at)} ${span(now - x.at)} 지남`
+            : x.state === 'soon' ? `${hmOf(x.at)} ${span(x.at - now)} 뒤`
+            : `${hmOf(x.at)} ${LABEL[x.state]}`;
+          chips.append(el('span', `badge b-${x.hits.length > 1 && s.kind === '약' ? 'dup' : x.state}`, text));
+        }
+        card.append(chips);
+        return card;
+      }) : [el('p', 'empty', '오늘 적용되는 일정이 없습니다. 일정 탭의 사용·시작일·종료일을 확인하세요.')]));
+
+      document.getElementById('timeline').replaceChildren(...(timeline.length ? timeline.map(e => {
+        const li = el('li'); const what = el('span', 'what');
+        if (e.log) {
+          const l = e.log;
+          const detail = [l.symptoms, l.weight && `${l.weight}kg`, l.amount, l.memo].filter(Boolean).join(' · ');
+          what.append(`${l.pet} ${l.item}`, el('small', null, ` · ${l.who}${detail ? ' · ' + detail : ''}`));
+          li.append(el('span', 't', hmOf(l.t)), what, el('span', 'badge b-plan', '기록'));
+        } else {
+          const { s, x } = e;
+          const who = x.hits.map(h => `${hmOf(h.t)} ${h.who}${h.memo ? ` (${h.memo})` : ''}`).join(', ');
+          what.append(`${s.pet} ${s.item}`, el('small', null, x.hits.length ? ` · ${who}` : ` · 예정 ${hmOf(x.at)}`));
+          const cls = x.hits.length > 1 && s.kind === '약' ? 'dup' : x.state;
+          li.append(el('span', 't', hmOf(e.t)), what, el('span', `badge b-${cls}`, cls === 'dup' ? '중복' : LABEL[x.state]));
+        }
+        return li;
+      }) : [el('li', 'empty', '오늘 기록이 아직 없습니다.')]));
+    }
+
+    function setPets() {
+      const select = document.getElementById('pet'); const keep = select.value;
+      select.replaceChildren(new Option('전체', ''), ...[...new Set(state.data.schedule.map(s => s.pet))].sort().map(p => new Option(p, p)));
+      select.value = [...select.options].some(o => o.value === keep) ? keep : '';
+      select.parentElement.hidden = select.options.length <= 2;
+    }
+
+    // ---- 시작: 생성 시점 데이터로 먼저 그리고, 시트 주소가 있으면 새로 읽어 바꿉니다 ----
+    const snap = CONFIG.snapshot;
+    const state = { data: { schedule: snap.schedule, logs: snap.logs.map(l => ({ ...l, t: wallOf(l.at.slice(0, 10), l.at.slice(11)) })) } };
+    const source = document.getElementById('source');
+    document.getElementById('title').textContent = CONFIG.title;
+    document.getElementById('description').textContent = CONFIG.description;
+    document.getElementById('footer-source').textContent = `데이터: ${CONFIG.sourceLabel} · 페이지 생성 ${CONFIG.generatedAt} KST`;
+    document.getElementById('footer-build').textContent = CONFIG.build;
+    if (/^https?:\/\//.test(CONFIG.formUrl)) {
+      const record = document.getElementById('record'); record.href = CONFIG.formUrl; record.rel = 'noopener'; record.hidden = false;
+    }
+    source.textContent = `생성 시점(${CONFIG.generatedAt.slice(11)}) 데이터`;
+    document.getElementById('pet').addEventListener('change', render);
+    setPets(); render();
+    setInterval(render, 30 * 1000);
+
+    async function refresh() {
+      if (!CONFIG.scheduleUrl || !CONFIG.logUrl) return;
+      const get = async url => {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`${res.status} 응답`);
+        const text = await res.text();
+        if (/^\s*<(!doctype html|html)/i.test(text)) throw new Error('CSV 대신 웹페이지가 왔습니다');
+        return text;
+      };
+      try {
+        const [sText, lText] = await Promise.all([get(CONFIG.scheduleUrl), get(CONFIG.logUrl)]);
+        const s = scheduleFromCSV(sText), l = logsFromCSV(lText);
+        state.data = { schedule: s.schedule, logs: l.logs };
+        const skipped = s.skipped + l.skipped;
+        source.className = skipped ? 'warn' : '';
+        source.textContent = `시트에서 ${hmOf(nowWall())}에 읽음 · 반영까지 최대 5분` + (skipped ? ` · 읽지 못한 행 ${skipped}개(Actions 로그에서 이유 확인)` : '');
+        setPets(); render();
+      } catch (error) {
+        source.className = 'warn';
+        source.textContent = `시트를 새로 읽지 못해 생성 시점(${CONFIG.generatedAt.slice(11)}) 데이터를 보여 줍니다. ${error.message}`;
+      }
+    }
+    refresh();
+    setInterval(refresh, 2 * 60 * 1000);
+  </script>
+</body>
+</html>
