@@ -287,7 +287,7 @@
     document.getElementById('footer-source').textContent = `데이터: ${CONFIG.sourceLabel} · 페이지 생성 ${CONFIG.generatedAt} KST`;
     document.getElementById('footer-build').textContent = CONFIG.build;
     if (/^https?:\/\//.test(CONFIG.formUrl)) {
-      const record = document.getElementById('record'); record.href = CONFIG.formUrl; record.rel = 'noopener'; record.hidden = false;
+      const record = document.getElementById('record'); record.href = CONFIG.formUrl; record.target = '_blank'; record.rel = 'noopener'; record.hidden = false;
     }
     source.textContent = `생성 시점(${CONFIG.generatedAt.slice(11)}) 데이터`;
     document.getElementById('pet').addEventListener('change', render);
