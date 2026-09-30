@@ -130,20 +130,23 @@
     }
     function parseTimeOnly(v) {
       const m = v.match(/^(?:(오전|오후)\s*)?(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(AM|PM))?$/i);
-      return m ? [to24(+m[2], m[1] || m[4]), +m[3]] : null;
+      if (!m) return null;
+      const h = to24(+m[2], m[1] || m[4]), mi = +m[3];
+      return h < 24 && mi < 60 ? [h, mi] : null;
     }
+    const isoDate = v => { const m = (v || '').match(/^(\d{4})\s*[-.]\s*(\d{1,2})\s*[-.]\s*(\d{1,2})\.?$/); return m ? `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}` : ''; };
     function scheduleFromCSV(text) {
       const { header, rows } = parseCSV(text); let skipped = 0;
       for (const n of ['반려동물', '항목', '종류', '시각', '사용']) if (!header.includes(n)) throw new Error(`일정 탭에 '${n}' 열이 없습니다`);
       const out = [];
       for (const r of rows) {
         if ((r['사용'] || '').toUpperCase() !== 'Y') continue;
-        const times = (r['시각'] || '').split(',').map(s => s.trim()).filter(Boolean);
-        const okTimes = times.every(t => /^\d{1,2}:\d{2}$/.test(t));
+        const times = (r['시각'] || '').split(',').map(s => s.trim()).filter(Boolean).map(parseTimeOnly);
+        const okTimes = times.every(Boolean);
         const interval = r['최소간격'] ? Number(r['최소간격']) : null;
         if (!r['반려동물'] || !r['항목'] || !['밥', '약'].includes(r['종류']) || !times.length || !okTimes || (r['종류'] === '약' && !(interval > 0))) { skipped++; continue; }
-        out.push({ pet: r['반려동물'], item: r['항목'], kind: r['종류'], times: times.map(t => t.padStart(5, '0')).sort(),
-          amount: r['양'] || '', interval, start: r['시작일'] || '', end: r['종료일'] || '', memo: r['메모'] || '' });
+        out.push({ pet: r['반려동물'], item: r['항목'], kind: r['종류'], times: [...new Set(times.map(([h, m]) => `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`))].sort(),
+          amount: r['양'] || '', interval, start: isoDate(r['시작일']), end: isoDate(r['종료일']), memo: r['메모'] || '' });
       }
       return { schedule: out, skipped };
     }

@@ -38,7 +38,7 @@ KO_STAMP = re.compile(r"^(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})\.?\s+(?:(오전|오
 ISO_STAMP = re.compile(r"^(\d{4})-(\d{1,2})-(\d{1,2})[ T](\d{1,2}):(\d{2})(?::(\d{2}))?$")
 US_STAMP = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(AM|PM))?$", re.I)
 TIME_ONLY = re.compile(r"^(?:(오전|오후)\s*)?(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(AM|PM))?$", re.I)
-HHMM = re.compile(r"^(\d{1,2}):(\d{2})$")
+DATE_TEXT = re.compile(r"(\d{4})\s*[-.]\s*(\d{1,2})\s*[-.]\s*(\d{1,2})\.?")
 
 
 class DataError(ValueError):
@@ -84,13 +84,13 @@ def parse_time_only(value):
 def parse_date(value, number, name):
     if not value:
         return ""
-    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+    m = DATE_TEXT.fullmatch(value)  # 시트가 날짜로 바꿔 '2026. 9. 1'처럼 내보내도 읽습니다
+    if not m:
         raise DataError(f"일정 {number}행의 {name}은 YYYY-MM-DD 형식이어야 합니다: {value}")
     try:
-        date.fromisoformat(value)
+        return date(int(m.group(1)), int(m.group(2)), int(m.group(3))).isoformat()
     except ValueError as error:
         raise DataError(f"일정 {number}행의 {name}이 없는 날짜입니다: {value}") from error
-    return value
 
 
 def read_source(source):
@@ -144,10 +144,10 @@ def parse_schedule(text):
             raise DataError(f"일정 {number}행의 종류는 밥 또는 약이어야 합니다: {kind or '(빈칸)'}")
         times = []
         for part in [p.strip() for p in row.get("시각", "").split(",") if p.strip()]:
-            m = HHMM.match(part)
-            if not m or int(m.group(1)) > 23 or int(m.group(2)) > 59:
+            parsed = parse_time_only(part)  # 시트가 시간으로 바꿔 '8:00:00'처럼 내보내도 읽습니다
+            if parsed is None:
                 raise DataError(f"일정 {number}행의 시각은 HH:MM이어야 합니다(여러 개면 쉼표): {part}")
-            times.append(f"{int(m.group(1)):02d}:{m.group(2)}")
+            times.append(f"{parsed[0]:02d}:{parsed[1]:02d}")
         if not times:
             raise DataError(f"일정 {number}행의 시각이 비어 있습니다.")
         interval = None
