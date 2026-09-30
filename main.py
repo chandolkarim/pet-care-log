@@ -277,12 +277,13 @@ def main(argv=None):
 
     schedule_source = args.schedule or os.environ.get("SCHEDULE_CSV_URL", "").strip() or str(SAMPLE_SCHEDULE)
     log_source = args.log or os.environ.get("LOG_CSV_URL", "").strip() or str(SAMPLE_LOG)
-    form_url = os.environ.get("FORM_URL", "").strip()
+    # '+ 기록하기' 버튼 주소: 시트 기록 탭 편집 주소(RECORD_URL) 또는 구글 폼(FORM_URL)
+    form_url = os.environ.get("RECORD_URL", "").strip() or os.environ.get("FORM_URL", "").strip()
     is_url = lambda s: bool(re.match(r"https?://", s))
     using_sample = Path(schedule_source) == SAMPLE_SCHEDULE and Path(log_source) == SAMPLE_LOG
     try:
         if form_url and not is_url(form_url):
-            raise DataError(f"FORM_URL은 http:// 또는 https://로 시작해야 합니다: {form_url}")
+            raise DataError(f"RECORD_URL(또는 FORM_URL)은 http:// 또는 https://로 시작해야 합니다: {form_url}")
         generated_at = datetime.now(KST)
         site = load_site()
         schedule_text = read_source(schedule_source)

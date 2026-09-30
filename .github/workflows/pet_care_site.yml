@@ -33,6 +33,7 @@ jobs:
           # 저장소 Settings → Secrets and variables → Actions → Variables에 등록한 값
           SCHEDULE_CSV_URL: ${{ vars.SCHEDULE_CSV_URL }}
           LOG_CSV_URL: ${{ vars.LOG_CSV_URL }}
+          RECORD_URL: ${{ vars.RECORD_URL }}
           FORM_URL: ${{ vars.FORM_URL }}
         run: python main.py --output _site/index.html
       - name: Configure Pages

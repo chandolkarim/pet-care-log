@@ -72,7 +72,8 @@ open _site/index.html
 2. 저장소 Settings → Secrets and variables → Actions → **Variables**에 세 개를 등록합니다.
    - `SCHEDULE_CSV_URL`: 일정 탭 CSV 주소
    - `LOG_CSV_URL`: 기록 탭 CSV 주소
-   - `FORM_URL`: 등록하지 않습니다(3절의 폼을 쓸 때만)
+   - `RECORD_URL`: 시트 기록 탭의 편집 주소(`…/edit#gid=<기록 탭 번호>`). '+ 기록하기' 버튼이 이 탭을 엽니다
+   - `FORM_URL`: 3절의 폼을 쓸 때만. `RECORD_URL`이 있으면 그쪽이 먼저입니다
 3. Settings → Pages → Source를 **GitHub Actions**로 둡니다.
 4. Actions → Pet Care Site → **Run workflow**를 누릅니다.
 
@@ -92,5 +93,5 @@ open _site/index.html
 ## 공개 범위와 안전
 
 - 웹에 게시한 CSV와 페이지는 **주소를 아는 누구나** 볼 수 있습니다. 집 주소, 전화번호, 실명, 진료비는 적지 않고, 누가 열에는 호칭만 씁니다.
-- 시트 편집 주소는 페이지·README에 넣지 않습니다. 페이지 주소는 가족에게만 알립니다. 검색 엔진에 나오지 않도록 `noindex`를 넣었습니다.
+- '+ 기록하기'에 들어가는 편집 주소는 링크만으로 열리지 않습니다. 시트 **공유**에서 편집자로 추가한 가족만 열 수 있으니, 시트를 '링크가 있는 모든 사용자'로 공유하지 마세요. 페이지 주소는 가족에게만 알립니다. 검색 엔진에 나오지 않도록 `noindex`를 넣었습니다.
 - **수의사 처방을 대신하지 않습니다.** 약의 양과 간격은 처방전 값을 사람이 일정 탭에 적습니다.
